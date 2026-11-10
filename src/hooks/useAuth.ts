@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { authService, authStorage } from '../services/authService'
 import type { AuthUser, UserRole } from '../types/ledger'
 
@@ -28,7 +28,7 @@ export function useAuth() {
     return () => { active = false }
   }, [])
 
-  async function login(role: UserRole, identifier: string, password: string) {
+  const login = useCallback(async (role: UserRole, identifier: string, password: string) => {
     setBusy(true); setError('')
     try {
       const signedIn = await authService.login(role, identifier, password)
@@ -39,9 +39,9 @@ export function useAuth() {
       setError(err instanceof Error ? err.message : 'Sign in failed.')
       return null
     } finally { setBusy(false) }
-  }
+  }, [])
 
-  function enterDemo(role: UserRole) {
+  const enterDemo = useCallback((role: UserRole) => {
     const demoUser: AuthUser = {
       role,
       name: role === 'ADMIN' ? 'Demo Admin' : role === 'AUDITOR' ? 'Demo Auditor' : 'Alice Morgan',
@@ -54,17 +54,17 @@ export function useAuth() {
     setUser(demoUser)
     setError('')
     return demoUser
-  }
+  }, [])
 
-  async function logout() {
+  const logout = useCallback(async () => {
     setBusy(true)
     if (!user?.demo) {
       try { await authService.logout() } catch { /* Always clear local role state if the API is unavailable. */ }
     }
     authStorage.clear(); setUser(null); setError(''); setBusy(false)
-  }
+  }, [user])
 
-  async function refreshCurrent() {
+  const refreshCurrent = useCallback(async () => {
     if (!user || user.demo) return user
     try {
       const session = await authService.current()
@@ -76,7 +76,7 @@ export function useAuth() {
       setError(err instanceof Error ? err.message : 'Could not refresh your session.')
       return null
     }
-  }
+  }, [user])
 
   return { user, login, enterDemo, logout, refreshCurrent, restoring, busy, error }
 }

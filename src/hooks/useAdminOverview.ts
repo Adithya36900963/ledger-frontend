@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { adminService } from '../services/adminService'
 import type { AdminUser, AuditEvent, LedgerEntry, LedgerIntegrity } from '../types/ledger'
 import { demoAdminUsers, demoAuditRecords, demoLedgerEntries } from '../mocks/demoData'
@@ -24,7 +24,7 @@ export function useAdminOverview(demo: boolean) {
     return () => { active = false }
   }, [demo])
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     if (demo) return
     setLoading(true); setError('')
     try {
@@ -34,7 +34,7 @@ export function useAdminOverview(demo: boolean) {
       setUsers(nextUsers); setEvents(nextEvents); setEntries(nextEntries); setIntegrity(nextIntegrity)
     } catch (err) { setError(err instanceof Error ? err.message : 'Could not load admin records.') }
     finally { setLoading(false) }
-  }
+  }, [demo])
 
   return { users, events, entries, integrity, loading, error, refresh }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ledgerService } from '../services/ledgerService'
 import type { AuditEvent, LedgerEntry } from '../types/ledger'
 import { demoAuditRecords, demoLedgerEntries } from '../mocks/demoData'
@@ -22,7 +22,7 @@ export function useLedgerHistory(demo: boolean) {
     return () => { active = false }
   }, [demo])
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     if (demo) return
     setLoading(true); setError('')
     try {
@@ -30,7 +30,7 @@ export function useLedgerHistory(demo: boolean) {
       setEntries(nextEntries); setEvents(nextEvents)
     } catch (err) { setError(err instanceof Error ? err.message : 'Could not load account history.') }
     finally { setLoading(false) }
-  }
+  }, [demo])
 
   return { entries, events, loading, error, refresh }
 }

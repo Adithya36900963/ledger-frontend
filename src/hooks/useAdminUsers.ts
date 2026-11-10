@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { accountService } from '../services/accountService'
 import { authService } from '../services/authService'
 import type { CreatedUser, ManagedRole } from '../types/ledger'
@@ -10,7 +10,7 @@ export function useAdminUsers(demo = false) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
-  async function create(payload: { userName: string; email: string; number: string; password: string; role: ManagedRole }) {
+  const create = useCallback(async (payload: { userName: string; email: string; number: string; password: string; role: ManagedRole }) => {
     setBusy(true); setError(''); setNotice('')
     try {
       let result
@@ -51,7 +51,7 @@ export function useAdminUsers(demo = false) {
       setError(err instanceof Error ? err.message : 'User creation failed.')
       return false
     } finally { setBusy(false) }
-  }
+  }, [demo, users.length])
 
   return { users, busy, error, notice, create }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { transactionService } from '../services/transactionService'
 import type { Account, TransactionRequest, TransactionResult, TransactionType } from '../types/ledger'
 import { demoTransactions } from '../mocks/demoData'
@@ -13,7 +13,7 @@ export function useTransactions(
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
-  async function submit(type: TransactionType, payload: TransactionRequest) {
+  const submit = useCallback(async (type: TransactionType, payload: TransactionRequest) => {
     setBusy(true); setError(''); setNotice('')
     try {
       let result: TransactionResult
@@ -42,8 +42,8 @@ export function useTransactions(
       setError(err instanceof Error ? err.message : 'The transaction could not be completed.')
       return null
     } finally { setBusy(false) }
-  }
+  }, [currentAccount, demo, setAccount])
 
-  function clear() { setItems(demo ? [...demoTransactions] : []); setError(''); setNotice('') }
+  const clear = useCallback(() => { setItems(demo ? [...demoTransactions] : []); setError(''); setNotice('') }, [demo])
   return { items, busy, error, notice, submit, clear, setError, setNotice }
 }
