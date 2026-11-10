@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { AuthUser } from '../../types/ledger'
 import { Sidebar } from '../common/Sidebar'
 import { DemoBadge } from '../common/DemoBadge'
@@ -7,10 +8,10 @@ import { AuditEventsCard } from '../common/AuditEventsCard'
 import { LedgerEntriesCard } from '../common/LedgerEntriesCard'
 import { LedgerIntegrityCard } from '../common/LedgerIntegrityCard'
 
-export function AuditorDashboard({ user, onSignOut }: { user: AuthUser; onSignOut: () => void }) {
+export const AuditorDashboard = memo(function AuditorDashboard({ user, onSignOut }: { user: AuthUser; onSignOut: () => void }) {
   const audit = useAuditOverview(Boolean(user.demo))
   return <div className="admin-shell">
-    <Sidebar section="AUDIT WORKSPACE" user={user} onSignOut={onSignOut} navLabel="Audit overview" navIcon="◷" />
+    <Sidebar section="AUDIT WORKSPACE" user={user} onSignOut={onSignOut} navLabel="Audit overview" navIcon="◷" navTo="/auditor" />
     <main className="main-content admin-main" id="workspace">
       <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <b>Audit overview</b></div><div className="topbar-right">{user.demo && <DemoBadge />}<span className="readonly-badge">◉ Read only</span></div></header>
       <div className="content-wrap"><div className="welcome-row"><div><div className="eyebrow">READ-ONLY WORKSPACE</div><h1>Audit overview</h1><p>You are signed in with auditor access.</p></div></div>
@@ -22,4 +23,4 @@ export function AuditorDashboard({ user, onSignOut }: { user: AuthUser; onSignOu
       </div>
     </main>
   </div>
-}
+})

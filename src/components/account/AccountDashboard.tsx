@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { AuthUser, Account, AuditEvent, LedgerEntry, TransactionResult, TransactionType } from '../../types/ledger'
 import { formatMoney } from '../../types/ledger'
 import { Sidebar } from '../common/Sidebar'
@@ -27,9 +28,9 @@ type AccountDashboardProps = {
   historyError: string
 }
 
-export function AccountDashboard(props: AccountDashboardProps) {
+export const AccountDashboard = memo(function AccountDashboard(props: AccountDashboardProps) {
   return <div className="app-shell">
-    <Sidebar section="PERSONAL BANKING" user={props.user} onSignOut={props.logout} navLabel="Overview" navIcon="▦" />
+    <Sidebar section="PERSONAL BANKING" user={props.user} onSignOut={props.logout} navLabel="Overview" navIcon="▦" navTo="/account" />
     <main className="main-content" id="dashboard">
       <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div className="topbar-right">{props.demo ? <DemoBadge /> : <><span className="live-dot" /> Secure account access</>}</div></header>
       <div className="content-wrap">
@@ -49,4 +50,4 @@ export function AccountDashboard(props: AccountDashboardProps) {
       </div>
     </main>
   </div>
-}
+})

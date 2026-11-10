@@ -1,76 +1,89 @@
-import { useAccount } from './hooks/useAccount'
+import { lazy, Suspense, useCallback } from 'react'
+import type { ReactNode } from 'react'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import { useTransactions } from './hooks/useTransactions'
-import { useLedgerHistory } from './hooks/useLedgerHistory'
-import { AccountDashboard } from './components/account/AccountDashboard'
-import { AdminDashboard } from './components/admin/AdminDashboard'
-import { AuditorDashboard } from './components/auditor/AuditorDashboard'
-import { LoginPage } from './components/auth/LoginPage'
-import { VerificationPage } from './components/auth/VerificationPage'
-import type { TransactionType, UserRole } from './types/ledger'
+import type { AuthUser, UserRole } from './types/ledger'
 import './App.css'
 
-function App() {
-  const auth = useAuth()
+const LoginPage = lazy(() => import('./components/auth/LoginPage').then((module) => ({ default: module.LoginPage })))
+const VerificationPage = lazy(() => import('./components/auth/VerificationPage').then((module) => ({ default: module.VerificationPage })))
+const AccountWorkspace = lazy(() => import('./components/account/AccountWorkspace').then((module) => ({ default: module.AccountWorkspace })))
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })))
+const AuditorDashboard = lazy(() => import('./components/auditor/AuditorDashboard').then((module) => ({ default: module.AuditorDashboard })))
 
-  if (auth.restoring) return <div className="auth-page"><div className="loading-line"><span className="loader" /> Restoring your secure session…</div></div>
-  if (!auth.user) {
-    return <LoginPage busy={auth.busy} error={auth.error} onLogin={(role: UserRole, login: string, password: string) => auth.login(role, login, password)} onDemo={auth.enterDemo} />
-  }
-
-  if (!auth.user.demo && (!auth.user.emailVerified || !auth.user.mobileVerified)) {
-    return <VerificationPage user={auth.user} onCheck={auth.refreshCurrent} onSignOut={auth.logout} />
-  }
-
-  if (auth.user.role === 'ADMIN') return <AdminDashboard user={auth.user} onSignOut={auth.logout} />
-  if (auth.user.role === 'AUDITOR') return <AuditorDashboard user={auth.user} onSignOut={auth.logout} />
-  return <AccountWorkspace key={`${auth.user.email ?? auth.user.name}-${auth.user.demo ? 'demo' : 'live'}`} user={auth.user} onSignOut={auth.logout} />
+const rolePath: Record<UserRole, string> = {
+  ADMIN: '/admin',
+  AUDITOR: '/auditor',
+  ACCOUNT_HOLDER: '/account',
 }
 
-function AccountWorkspace({ user, onSignOut }: { user: NonNullable<ReturnType<typeof useAuth>['user']>; onSignOut: () => Promise<void> }) {
-  const accountState = useAccount(user)
-  const transactionState = useTransactions(accountState.account, accountState.setAccount, Boolean(user.demo))
-  const historyState = useLedgerHistory(Boolean(user.demo))
+function LoadingPage({ message = 'Loading LedgerLine…' }: { message?: string }) {
+  return <div className="auth-page"><div className="loading-line"><span className="loader" /> {message}</div></div>
+}
 
-  async function submitTransaction(type: TransactionType, amount: number, recipient?: number) {
-    if (!Number.isFinite(amount) || amount <= 0) {
-      transactionState.setError('Enter an amount greater than zero.')
-      return null
-    }
-    if (type === 'TRANSFER' && (!recipient || !Number.isInteger(recipient) || recipient <= 0)) {
-      transactionState.setError('Enter a valid recipient account ID.')
-      return null
-    }
-    const result = await transactionState.submit(type, {
-      amount,
-      ...(type === 'TRANSFER' ? { destinationAccountId: recipient } : {}),
-    })
-    if (result && !user.demo) await historyState.refresh()
-    if (!result && !user.demo) {
-      await accountState.refresh()
-      await historyState.refresh()
-    }
-    return result
-  }
+function App() {
+  return <BrowserRouter><AppRoutes /></BrowserRouter>
+}
 
-  return <AccountDashboard
-    user={user}
-    account={accountState.account}
-    loading={accountState.loading}
-    loadError={accountState.error}
-    refresh={() => { void accountState.refresh() }}
-    logout={onSignOut}
-    transactions={transactionState.items}
-    busy={transactionState.busy}
-    error={transactionState.error}
-    notice={transactionState.notice}
-    submit={submitTransaction}
-    demo={Boolean(user.demo)}
-    ledgerEntries={historyState.entries}
-    auditEvents={historyState.events}
-    historyLoading={historyState.loading}
-    historyError={historyState.error}
-  />
+function AppRoutes() {
+  const auth = useAuth()
+
+  if (auth.restoring) return <LoadingPage message="Restoring your secure session…" />
+
+  return <Suspense fallback={<LoadingPage />}>
+    <Routes>
+      <Route path="/login" element={<LoginRoute auth={auth} />} />
+      <Route element={<RequireSession user={auth.user} />}>
+        <Route path="/verify" element={<VerificationRoute user={auth.user} onCheck={auth.refreshCurrent} onSignOut={auth.logout} />} />
+        <Route element={<RequireVerified user={auth.user} />}>
+          <Route path="/account" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/admin" element={<RoleRoute user={auth.user} role="ADMIN"><AdminDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/auditor" element={<RoleRoute user={auth.user} role="AUDITOR"><AuditorDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+        </Route>
+      </Route>
+      <Route path="/" element={<Navigate to={auth.user ? rolePath[auth.user.role] : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={auth.user ? rolePath[auth.user.role] : '/login'} replace />} />
+    </Routes>
+  </Suspense>
+}
+
+function LoginRoute({ auth }: { auth: ReturnType<typeof useAuth> }) {
+  const navigate = useNavigate()
+  const { login, enterDemo, user } = auth
+  const onLogin = useCallback(async (role: UserRole, identifier: string, password: string) => {
+    const signedIn = await login(role, identifier, password)
+    if (signedIn) navigate(rolePath[signedIn.role], { replace: true })
+    return signedIn
+  }, [login, navigate])
+  const onDemo = useCallback((role: UserRole) => {
+    const demoUser = enterDemo(role)
+    navigate(rolePath[demoUser.role], { replace: true })
+  }, [enterDemo, navigate])
+
+  if (user) return <Navigate to={rolePath[user.role]} replace />
+  return <LoginPage busy={auth.busy} error={auth.error} onLogin={onLogin} onDemo={onDemo} />
+}
+
+function RequireSession({ user }: { user: AuthUser | null }) {
+  return user ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+function RequireVerified({ user }: { user: AuthUser | null }) {
+  if (!user) return <Navigate to="/login" replace />
+  if (!user.demo && (!user.emailVerified || !user.mobileVerified)) return <Navigate to="/verify" replace />
+  return <Outlet />
+}
+
+function RoleRoute({ user, role, children }: { user: AuthUser | null; role: UserRole; children: ReactNode }) {
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== role) return <Navigate to={rolePath[user.role]} replace />
+  return children
+}
+
+function VerificationRoute({ user, onCheck, onSignOut }: { user: AuthUser | null; onCheck: () => Promise<AuthUser | null>; onSignOut: () => Promise<void> }) {
+  if (!user) return <Navigate to="/login" replace />
+  if (user.demo || (user.emailVerified && user.mobileVerified)) return <Navigate to={rolePath[user.role]} replace />
+  return <VerificationPage user={user} onCheck={onCheck} onSignOut={onSignOut} />
 }
 
 export default App
