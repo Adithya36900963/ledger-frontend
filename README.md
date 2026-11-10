@@ -19,6 +19,8 @@ To point the frontend at a different backend, set `VITE_API_URL` in a local `.en
 VITE_API_URL=http://localhost:8080
 ```
 
+The repository's `.env.example` contains this local default. Copy it to `.env` for local development; Vite reads `VITE_*` variables from that file.
+
 The browser sends the backend's HttpOnly JWT cookie with API calls. The backend must allow the frontend origin in its credentialed CORS configuration.
 
 ## Source layout
