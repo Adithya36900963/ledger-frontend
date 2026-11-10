@@ -56,6 +56,16 @@ The frontend sends the backend's HttpOnly JWT cookie with API calls. Account-hol
 
 Role-specific pages improve navigation, but they are not the authorization boundary. The Spring Boot API enforces roles and account ownership on protected requests. Do not treat the local demo workspace as authentication or as evidence that the live backend is working.
 
+## Client routes and loading
+
+- `/login` — sign-in and local demo entry
+- `/verify` — required verification for signed-in users who have not completed both checks
+- `/account` — account-holder workspace
+- `/admin` — administrator user-management and ledger workspace
+- `/auditor` — read-only audit workspace
+
+Role guards redirect users away from routes they are not allowed to view. Dashboard and authentication screens are lazy-loaded, and account callbacks and dashboard components use memoization where it prevents avoidable re-renders. Static hosts must serve `index.html` for these client routes; `public/_redirects` and `vercel.json` include the SPA fallback for Netlify and Vercel.
+
 ## Build checks
 
 ```powershell
