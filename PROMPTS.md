@@ -40,4 +40,4 @@ AI assistance is allowed for this assessment. This is a transparent retrospectiv
 - **What the tool produced:** A check of role boundaries, plus documentation that distinguishes frontend navigation from backend authorization.
 - **What was incomplete:** The frontend README did not clearly say that backend authorization is authoritative or that demo mode is not live authentication.
 - **What I changed instead:** Added that explanation and the local build-check commands to the README; added auditor-denial tests in the backend.
-- **Commit:** Pending. This entry is being recorded as the next focused frontend documentation commit; the backend test is not in this frontend repository.
+- **Commit:** [089bca4 — record AI-assisted development notes](https://github.com/Adithya36900963/ledger-frontend/commit/089bca4) (local only; push pending). The backend test is not in this frontend repository.
