@@ -53,5 +53,19 @@
 .mpin-setup button:disabled { opacity: .5; cursor: not-allowed; }
 .transfer-card-mpin { margin: 12px 0; padding: 12px; border: 1px solid #e8ece7; border-radius: 10px; }
 .transfer-card-mpin input { flex: 1; }
+.secure-pay-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 18px; background: #111916a6; backdrop-filter: blur(4px); }
+.secure-pay-dialog { position: relative; display: flex; flex-direction: column; align-items: center; width: min(100%, 390px); padding: 29px 25px 24px; border: 1px solid #e9ece8; border-radius: 19px; background: #fff; box-shadow: 0 24px 70px #0003; text-align: center; }
+.secure-pay-close { position: absolute; top: 11px; right: 13px; width: 31px; height: 31px; border: 0; border-radius: 50%; background: #f2f4f1; color: #617067; font-size: 22px; cursor: pointer; }
+.secure-pay-icon { display: grid; width: 47px; height: 47px; place-items: center; margin-bottom: 12px; border-radius: 15px; background: #f0ebfb; color: #6842bd; font-size: 25px; }
+.secure-pay-dialog h2 { margin: 5px 0 8px; color: #27332c; font: 800 21px Manrope, sans-serif; }
+.secure-pay-dialog p { margin: 0 0 18px; color: #758078; font-size: 13px; }
+.secure-pay-dialog p b { color: #6240b5; }
+.secure-pay-dialog label { align-self: stretch; margin-bottom: 7px; color: #4c5a50; text-align: left; font-size: 12px; font-weight: 700; }
+.secure-pay-dialog input { width: 100%; padding: 13px; border: 1px solid #dde5dd; border-radius: 10px; outline: 0; background: #fbfcfa; color: #29372e; text-align: center; letter-spacing: .38em; font-size: 20px; }
+.secure-pay-dialog input:focus { border-color: #8662d1; box-shadow: 0 0 0 3px #8662d125; }
+.secure-pay-button { width: 100%; margin-top: 15px; padding: 13px; border: 0; border-radius: 11px; background: linear-gradient(110deg, #7951d0, #6037b7); color: white; font-weight: 750; cursor: pointer; }
+.secure-pay-button:disabled { opacity: .55; cursor: not-allowed; }
+.secure-pay-dialog > small { margin-top: 12px; color: #89928b; font-size: 10px; line-height: 1.5; }
+.recipient-resolving { margin: 0 0 10px; color: #7f8981; font-size: 12px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 620px) { .contact-section, .contact-history { padding: 15px; } .contact-row { width: 100%; } .contact-messages { padding: 9px; } }

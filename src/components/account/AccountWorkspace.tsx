@@ -15,7 +15,7 @@ export function AccountWorkspace({ user, onSignOut }: { user: AuthUser; onSignOu
   const { refresh: refreshHistory } = historyState
   const { setError: setTransactionError, submit: submitTransactionRequest } = transactionState
 
-  const submitTransaction = useCallback(async (type: TransactionType, amount: number, recipient?: number, mpin?: string) => {
+  const submitTransaction = useCallback(async (type: TransactionType, amount: number, recipient?: number, mpin?: string, idempotencyKey?: string) => {
     if (!Number.isFinite(amount) || amount <= 0) {
       setTransactionError('Enter an amount greater than zero.')
       return null
@@ -28,6 +28,10 @@ export function AccountWorkspace({ user, onSignOut }: { user: AuthUser; onSignOu
       setTransactionError('Enter your 6-digit MPIN to authorize this transfer.')
       return null
     }
+    if (type === 'TRANSFER' && !idempotencyKey) {
+      setTransactionError('Payment confirmation expired. Click Pay again to start a new confirmation.')
+      return null
+    }
     if (type === 'TRANSFER' && (!recipient || !Number.isInteger(recipient) || recipient <= 0)) {
       setTransactionError('Enter a valid recipient account ID.')
       return null
@@ -36,8 +40,9 @@ export function AccountWorkspace({ user, onSignOut }: { user: AuthUser; onSignOu
       amount,
       ...(type === 'TRANSFER' ? { destinationAccountId: recipient } : {}),
       ...(type === 'TRANSFER' ? { mpin } : {}),
+      ...(type === 'TRANSFER' ? { idempotencyKey } : {}),
     })
-    if (result && !user.demo) await refreshHistory()
+    if (result && !user.demo) await Promise.all([refreshHistory(), refreshAccountData()])
     if (!result && !user.demo) {
       await refreshAccountData()
       await refreshHistory()

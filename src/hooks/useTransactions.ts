@@ -34,7 +34,7 @@ export function useTransactions(
       } else {
         result = await transactionService.submit(type, payload)
       }
-      setItems((current) => [result, ...current].slice(0, 8))
+      setItems((current) => [result, ...current.filter((item) => item.transactionId !== result.transactionId)].slice(0, 8))
       setAccount((current) => current ? { ...current, balance: result.balance } : current)
       setNotice(`${type.charAt(0)}${type.slice(1).toLowerCase()} completed successfully.`)
       return result

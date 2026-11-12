@@ -68,6 +68,8 @@ export type Account = {
   balance: number
 }
 
+export type RecipientAccount = { accountId: number; holderName: string }
+
 export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
 export type TransactionResult = {
   transactionId: string
@@ -83,6 +85,7 @@ export type TransactionRequest = {
   amount: number
   destinationAccountId?: number
   mpin?: string
+  idempotencyKey?: string
 }
 
 export type RegistrationRequest = {

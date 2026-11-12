@@ -8,7 +8,12 @@ const route: Record<TransactionType, string> = {
 }
 
 export const transactionService = {
-  submit: (type: TransactionType, payload: TransactionRequest) => request<TransactionResult>(route[type], {
-    method: 'POST', body: JSON.stringify(payload),
-  }),
+  submit: (type: TransactionType, payload: TransactionRequest) => {
+    const { idempotencyKey, ...body } = payload
+    return request<TransactionResult>(route[type], {
+      method: 'POST',
+      ...(idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : {}),
+      body: JSON.stringify(body),
+    })
+  },
 }
