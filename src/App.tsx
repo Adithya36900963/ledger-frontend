@@ -39,6 +39,7 @@ function AppRoutes() {
         <Route path="/verify" element={<VerificationRoute user={auth.user} onCheck={auth.refreshCurrent} onSignOut={auth.logout} />} />
         <Route element={<RequireVerified user={auth.user} />}>
           <Route path="/account" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/account/contacts/:accountId" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/admin" element={<RoleRoute user={auth.user} role="ADMIN"><AdminDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/auditor" element={<RoleRoute user={auth.user} role="AUDITOR"><AuditorDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
         </Route>

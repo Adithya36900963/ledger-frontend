@@ -23,6 +23,7 @@ export const demoUsers: CreatedUser[] = [
 export const demoAdminUsers: AdminUser[] = [
   { userId: 1, name: 'Demo Admin', email: 'admin@ledgerline.demo', number: '9000000001', role: 'ADMIN', emailVerified: true, mobileVerified: true, accountHolderStatus: null, accountId: null, balance: null },
   { userId: 11, name: 'Alice Morgan', email: 'alice@ledgerline.demo', number: '9000000002', role: 'ACCOUNT_HOLDER', emailVerified: true, mobileVerified: true, accountHolderStatus: 'ACTIVE', accountId: 101, balance: 2840.5 },
+  { userId: 22, name: 'Bob Chen', email: 'bob@ledgerline.demo', number: '9000000004', role: 'ACCOUNT_HOLDER', emailVerified: true, mobileVerified: true, accountHolderStatus: 'ACTIVE', accountId: 202, balance: 520 },
   { userId: 12, name: 'Sam Taylor', email: 'sam@ledgerline.demo', number: '9000000003', role: 'AUDITOR', emailVerified: true, mobileVerified: true, accountHolderStatus: null, accountId: null, balance: null },
 ]
 
