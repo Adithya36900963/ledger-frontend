@@ -1,6 +1,6 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import type { AuthUser, Account, AuditEvent, LedgerEntry, TransactionResult, TransactionType } from '../../types/ledger'
+import type { AuthUser, Account, AuditEvent, LedgerEntry, TransferHistory, TransactionResult, TransactionType } from '../../types/ledger'
 import { formatMoney } from '../../types/ledger'
 import { Sidebar } from '../common/Sidebar'
 import { StatCard } from '../common/StatCard'
@@ -23,15 +23,25 @@ type AccountDashboardProps = {
   busy: boolean
   error: string
   notice: string
-  submit: (type: TransactionType, amount: number, recipient?: number) => Promise<unknown>
+  submit: (type: TransactionType, amount: number, recipient?: number, mpin?: string) => Promise<unknown>
   demo: boolean
   ledgerEntries: LedgerEntry[]
+  transfers: TransferHistory[]
   auditEvents: AuditEvent[]
   historyLoading: boolean
   historyError: string
+  mpinConfigured: boolean
+  mpinLoading: boolean
+  mpinError: string
+  setupMpin: (mpin: string) => Promise<boolean>
 }
 
 export const AccountDashboard = memo(function AccountDashboard(props: AccountDashboardProps) {
+  const [transferAmount, setTransferAmount] = useState('')
+  const [transferPin, setTransferPin] = useState('')
+  const [newMpin, setNewMpin] = useState('')
+  const [confirmMpin, setConfirmMpin] = useState('')
+  const [mpinMessage, setMpinMessage] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const { accountId: contactRouteId } = useParams()
@@ -39,18 +49,27 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
   const contacts = useMemo(() => {
     const transfers = props.transactions.filter((item) => item.type === 'TRANSFER')
     const ids = new Set<number>()
+    props.transfers.forEach((item) => ids.add(item.counterpartyAccountId))
     transfers.forEach((item) => {
       if (item.fromAccountId && item.fromAccountId !== props.account?.accountId) ids.add(item.fromAccountId)
       if (item.toAccountId && item.toAccountId !== props.account?.accountId) ids.add(item.toAccountId)
     })
     return [...ids].map((id) => {
       const demoContact = demoAdminUsers.find((person) => person.accountId === id)
-      return { id, name: demoContact?.name ?? `Account ${String(id).padStart(8, '0')}` }
+      const historyContact = props.transfers.find((item) => item.counterpartyAccountId === id)
+      return { id, name: historyContact?.counterpartyName ?? demoContact?.name ?? `Account ${String(id).padStart(8, '0')}` }
     })
-  }, [props.transactions, props.account?.accountId])
+  }, [props.transactions, props.transfers, props.account?.accountId])
   const selectedContact = contacts.find((contact) => String(contact.id) === contactRouteId)
-  const contactTransactions = props.transactions.filter((item) => item.type === 'TRANSFER' &&
-    (item.fromAccountId === selectedContact?.id || item.toAccountId === selectedContact?.id))
+  const contactTransactions = useMemo(() => {
+    const history = props.transfers.filter((item) => item.counterpartyAccountId === selectedContact?.id)
+    const combined = new Map<string, Pick<TransactionResult, 'transactionId' | 'fromAccountId' | 'toAccountId' | 'amount' | 'createdAt'>>()
+    history.forEach((item) => combined.set(item.transactionId, item))
+    props.transactions.filter((item) => item.type === 'TRANSFER' &&
+      (item.fromAccountId === selectedContact?.id || item.toAccountId === selectedContact?.id))
+      .forEach((item) => combined.set(item.transactionId, item))
+    return [...combined.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))
+  }, [props.transfers, props.transactions, selectedContact?.id])
 
   return <div className="app-shell">
     <Sidebar section="PERSONAL BANKING" user={props.user} onSignOut={props.logout} navLabel="Overview" navIcon="▦" navTo="/account" />
@@ -72,6 +91,34 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
                   <b>{received ? '+' : '−'}{formatMoney(transaction.amount)}</b><span>{received ? 'Received' : 'Sent'} · Posted</span><small>{new Date(transaction.createdAt).toLocaleString()}</small><code>{transaction.transactionId}</code>
                 </article>
               })}</div> : <div className="contact-empty">No transfers with this contact yet.</div>}
+              <form className="contact-transfer" onSubmit={async (event) => {
+                event.preventDefault()
+                const amount = Number(transferAmount)
+                if (!Number.isFinite(amount) || amount <= 0 || Number(amount.toFixed(2)) !== amount) { setMpinMessage('Enter a positive amount with no more than two decimal places.'); return }
+                if (!/^\d{6}$/.test(transferPin)) { setMpinMessage('Enter your 6-digit MPIN to authorize this transfer.'); return }
+                const posted = await props.submit('TRANSFER', amount, selectedContact.id, transferPin)
+                if (posted) { setTransferAmount(''); setTransferPin(''); setMpinMessage('') }
+              }}>
+                <label className="sr-only" htmlFor="contact-transfer-amount">Transfer amount</label>
+                {props.mpinLoading ? <p className="mpin-loading">Checking transfer security…</p> : !props.mpinConfigured ? <div className="mpin-setup">
+                  <b>Set up your 6-digit MPIN</b><p>Use this PIN to authorize transfers. It is stored securely as a hash.</p>
+                  <input aria-label="Create 6-digit MPIN" type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="new-password" placeholder="Create MPIN" value={newMpin} onChange={(event) => setNewMpin(event.target.value.replace(/\D/g, '').slice(0, 6))} />
+                  <input aria-label="Confirm 6-digit MPIN" type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="new-password" placeholder="Confirm MPIN" value={confirmMpin} onChange={(event) => setConfirmMpin(event.target.value.replace(/\D/g, '').slice(0, 6))} />
+                  <button type="button" disabled={newMpin.length !== 6 || confirmMpin.length !== 6} onClick={async () => {
+                    if (newMpin !== confirmMpin) { setMpinMessage('The MPIN values do not match.'); return }
+                    const ready = await props.setupMpin(newMpin)
+                    setMpinMessage(ready ? 'MPIN is ready. Enter an amount and MPIN to send.' : props.mpinError || 'Could not set up MPIN.')
+                    if (ready) { setNewMpin(''); setConfirmMpin('') }
+                  }}>Set MPIN</button>
+                </div> : <>
+                  <span aria-hidden="true">₹</span><input id="contact-transfer-amount" type="number" min="0.01" step="0.01" placeholder="Enter amount" value={transferAmount} onChange={(event) => { setTransferAmount(event.target.value); setMpinMessage('') }} disabled={props.busy} />
+                  <input className="contact-mpin-input" aria-label="6-digit MPIN" type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="current-password" placeholder="MPIN" value={transferPin} onChange={(event) => { setTransferPin(event.target.value.replace(/\D/g, '').slice(0, 6)); setMpinMessage('') }} disabled={props.busy} />
+                  <button type="submit" disabled={props.busy || !transferAmount || Number(transferAmount) <= 0 || transferPin.length !== 6}>{props.busy ? 'Sending…' : 'Send'}</button>
+                </>}
+              </form>
+              {props.error && <div className="contact-transfer-message error" role="alert">{props.error}</div>}
+              {mpinMessage && <div className="contact-transfer-message error" role="alert">{mpinMessage}</div>}
+              {props.notice && <div className="contact-transfer-message success" role="status">{props.notice}</div>}
             </section>
           </> : <div className="contact-empty">This contact is not in your recent transfers.</div>}
         </section> : <>
@@ -84,7 +131,7 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
             <button className="contact-preview" onClick={() => navigate('/account/contacts')}>Browse your transfer contacts and open a person’s transaction chat <span>→</span></button>
           </section>
           <section className="content-grid">
-            <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} />
+            <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} mpinConfigured={props.mpinConfigured} mpinLoading={props.mpinLoading} mpinError={props.mpinError} setupMpin={props.setupMpin} />
             <ActivityCard transactions={props.transactions} entries={props.ledgerEntries} demo={props.demo} loading={props.historyLoading} />
           </section>
           {props.historyError && <div className="inline-error history-error" role="alert">Account history could not be loaded: {props.historyError}</div>}

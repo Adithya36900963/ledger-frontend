@@ -44,6 +44,16 @@ export type LedgerEntry = {
   createdAt: string
 }
 
+export type TransferHistory = {
+  transactionId: string
+  fromAccountId: number
+  toAccountId: number
+  counterpartyAccountId: number
+  counterpartyName: string
+  amount: number
+  createdAt: string
+}
+
 export type LedgerIntegrity = {
   balanced: boolean
   ledgerTotal: number
@@ -72,6 +82,7 @@ export type TransactionResult = {
 export type TransactionRequest = {
   amount: number
   destinationAccountId?: number
+  mpin?: string
 }
 
 export type RegistrationRequest = {
