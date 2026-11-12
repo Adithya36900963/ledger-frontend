@@ -93,7 +93,7 @@ export type RegistrationResult = {
 export type CreatedUser = RegistrationResult & { displayName: string }
 
 export const formatMoney = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount)
 
 export const formatRole = (role: UserRole) => role === 'ACCOUNT_HOLDER'
   ? 'Account holder'
