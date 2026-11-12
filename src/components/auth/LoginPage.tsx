@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { UserRole } from '../../types/ledger'
 import { Brand } from '../common/Brand'
+import { BankScene } from '../common/BankScene'
 
 type LoginPageProps = {
   busy: boolean
@@ -21,7 +22,7 @@ export function LoginPage({ busy, error, onLogin, onDemo }: LoginPageProps) {
     if (success) setPassword('')
   }
 
-  return <div className="auth-page"><div className="auth-decoration auth-decoration-one" /><div className="auth-decoration auth-decoration-two" />
+  return <div className="auth-page has-scene"><BankScene /><div className="auth-decoration auth-decoration-one" /><div className="auth-decoration auth-decoration-two" />
     <section className="auth-card"><Brand />
       <div className="auth-heading"><div className="eyebrow">WELCOME BACK</div><h1>Sign in to your account</h1><p>Access your LedgerLine workspace securely.</p></div>
       {error && <div className="auth-error" role="alert">{error}</div>}
