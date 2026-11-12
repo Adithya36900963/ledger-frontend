@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { AuthUser, Account, AuditEvent, LedgerEntry, TransactionResult, TransactionType } from '../../types/ledger'
 import { formatMoney } from '../../types/ledger'
 import { Sidebar } from '../common/Sidebar'
@@ -33,7 +33,9 @@ type AccountDashboardProps = {
 
 export const AccountDashboard = memo(function AccountDashboard(props: AccountDashboardProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { accountId: contactRouteId } = useParams()
+  const isContactsPage = location.pathname === '/account/contacts'
   const contacts = useMemo(() => {
     const transfers = props.transactions.filter((item) => item.type === 'TRANSFER')
     const ids = new Set<number>()
@@ -55,7 +57,11 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
     <main className="main-content" id="dashboard">
       <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div className="topbar-right">{props.demo ? <DemoBadge /> : <><span className="live-dot" /> Secure account access</>}</div></header>
       <div className="content-wrap">
-        {contactRouteId ? <section className="contact-page">
+        {isContactsPage ? <section className="contact-page">
+          <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
+          <div className="contact-history-heading"><div><div className="eyebrow">YOUR TRANSFER CONTACTS</div><h1>Choose a contact</h1><p className="contacts-description">Open a contact to see every transfer in your transaction chat.</p></div><span>{contacts.length} contacts</span></div>
+          {contacts.length ? <div className="contact-list contact-directory">{contacts.map((contact) => <button className="contact-row" key={contact.id} onClick={() => navigate(`/account/contacts/${contact.id}`)}><span className="contact-avatar">{contact.name.slice(0, 1).toUpperCase()}</span><span className="contact-label"><b>{contact.name}</b><small>LL-{String(contact.id).padStart(8, '0')}</small></span><span className="contact-open-hint">View transaction chat</span><span className="contact-arrow">›</span></button>)}</div> : <div className="contact-empty">Your transfer contacts will appear here after your first transfer.</div>}
+        </section> : contactRouteId ? <section className="contact-page">
           <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
           {selectedContact ? <>
             <header className="contact-profile"><span className="contact-avatar">{selectedContact.name.slice(0, 1).toUpperCase()}</span><div><div className="eyebrow">TRANSFER CONTACT</div><h1>{selectedContact.name}</h1><p>LL-{String(selectedContact.id).padStart(8, '0')}</p></div></header>
@@ -74,8 +80,8 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
         {props.loadError && !props.loading && <section className="load-error" role="alert"><div className="error-symbol">!</div><div><b>We couldn’t load your account</b><p>{props.loadError}</p><button className="text-button" onClick={props.refresh}>Try again</button></div></section>}
         {props.account && <>
           <section className="summary-grid" aria-label="Account summary"><BalanceCard account={props.account} /><StatCard label="Account status" value="Active" detail="Your account is ready to use" icon="↗" /><StatCard label="Account number" value={`LL-${String(props.account.accountId).padStart(8, '0')}`} detail="Use this number to receive money" icon="⌁" tone="purple" /></section>
-          <section className="contact-section"><div className="contact-section-heading"><div><div className="eyebrow">YOUR TRANSFER CONTACTS</div><h2>People you’ve sent money to</h2></div><span>{contacts.length} contacts</span></div>
-            {contacts.length ? <div className="contact-list">{contacts.map((contact) => <button className="contact-row" key={contact.id} onClick={() => navigate(`/account/contacts/${contact.id}`)}><span className="contact-avatar">{contact.name.slice(0, 1).toUpperCase()}</span><span className="contact-label"><b>{contact.name}</b><small>LL-{String(contact.id).padStart(8, '0')}</small></span><span className="contact-arrow">›</span></button>)}</div> : <p className="contact-empty">Your transfer contacts will appear here after your first transfer.</p>}
+          <section className="contact-section"><button className="contact-section-heading contact-heading-button" onClick={() => navigate('/account/contacts')}><div><div className="eyebrow">YOUR TRANSFER CONTACTS</div><h2>People you’ve sent money to</h2></div><span className="contact-see-all">See contacts <b>›</b></span></button>
+            <button className="contact-preview" onClick={() => navigate('/account/contacts')}>Browse your transfer contacts and open a person’s transaction chat <span>→</span></button>
           </section>
           <section className="content-grid">
             <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} />

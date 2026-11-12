@@ -10,6 +10,15 @@
 .contact-label b { color: #344138; font-size: 13px; }
 .contact-label small { color: #849087; font: 11px monospace; }
 .contact-arrow { margin-left: auto; color: #8060cf; font-size: 23px; }
+.contact-heading-button { width: 100%; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.contact-see-all { display: flex; align-items: center; gap: 7px; color: #6842bd; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.contact-see-all b { font-size: 20px; }
+.contact-preview { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 15px; border: 1px solid #e9eee9; border-radius: 11px; background: #fbfcfa; color: #748078; text-align: left; font-size: 13px; cursor: pointer; }
+.contact-preview span { color: #6842bd; font-size: 20px; }
+.contacts-description { margin: 7px 0 16px; color: #7f8981; font-size: 13px; }
+.contact-directory { display: grid; grid-template-columns: 1fr; }
+.contact-directory .contact-row { width: 100%; min-width: 0; padding: 13px 15px; background: #fff; }
+.contact-open-hint { margin-left: auto; color: #839087; font-size: 11px; }
 .contact-empty { padding: 24px 14px; color: #89928b; text-align: center; font-size: 13px; }
 .contact-page { max-width: 850px; margin: 0 auto; }
 .contact-back { margin: 2px 0 22px; padding: 8px 12px; border: 1px solid #e8ece7; border-radius: 9px; background: #fff; color: #59665d; cursor: pointer; }
