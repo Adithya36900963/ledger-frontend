@@ -115,3 +115,64 @@ html[data-theme='3d'] .coin-a { right: -30px; top: 40px; transform: translateZ(1
 @media (max-width: 980px) { html[data-theme='3d'] .auth-page.has-scene { grid-template-columns: 1fr; padding: 24px 5vw; } html[data-theme='3d'] .scene3d { height: 360px; order: -1; } html[data-theme='3d'] .scene-stage { transform: scale(.7) rotateX(10deg) rotateY(-14deg); } html[data-theme='3d'] .auth-card { transform: none; } }
 @media (prefers-reduced-motion: reduce) { html[data-theme='3d'] * { animation: none !important; transition: none !important; } }
 
+
+/* ---------- Account-number contacts, transfer chat and secure pay (3D) ----------
+   These screens ship with light-theme colours in Contacts.css / ActivityCard.css.
+   Without these rules the global `b`/`h2` override above leaves light text on white cards. */
+html[data-theme='3d'] .contact-section, html[data-theme='3d'] .contact-profile, html[data-theme='3d'] .contact-history {
+  background: var(--glass); border-color: var(--edge); backdrop-filter: blur(16px);
+  box-shadow: 0 18px 40px #00000055, inset 0 1px 0 #ffffff12;
+}
+html[data-theme='3d'] .contact-row, html[data-theme='3d'] .contact-directory .contact-row, html[data-theme='3d'] .contact-preview,
+html[data-theme='3d'] .contact-back, html[data-theme='3d'] .contact-transfer, html[data-theme='3d'] .transaction-detail,
+html[data-theme='3d'] .activity-totals > div, html[data-theme='3d'] .activity-filter, html[data-theme='3d'] .transaction-date span,
+html[data-theme='3d'] .mpin-setup, html[data-theme='3d'] .transfer-card-mpin { background: #ffffff08; border-color: var(--edge); }
+html[data-theme='3d'] .activity-filters { border-color: var(--edge); }
+html[data-theme='3d'] .contact-row:hover, html[data-theme='3d'] .contact-preview:hover, html[data-theme='3d'] .contact-back:hover, html[data-theme='3d'] .activity-filter:hover { border-color: var(--emerald); }
+html[data-theme='3d'] .contact-back, html[data-theme='3d'] .contact-preview, html[data-theme='3d'] .activity-filter { color: var(--muted); }
+html[data-theme='3d'] .contact-avatar { background: linear-gradient(135deg, #2ee6a62e, #5b8cff3d); color: var(--emerald); box-shadow: inset 0 0 0 1px var(--edge); }
+html[data-theme='3d'] .contact-label small, html[data-theme='3d'] .contact-profile p, html[data-theme='3d'] .contact-open-hint,
+html[data-theme='3d'] .contacts-description, html[data-theme='3d'] .contact-empty, html[data-theme='3d'] .recipient-resolving,
+html[data-theme='3d'] .contact-section-heading > span, html[data-theme='3d'] .contact-history-heading > span,
+html[data-theme='3d'] .mpin-loading, html[data-theme='3d'] .mpin-setup p, html[data-theme='3d'] .activity-intro,
+html[data-theme='3d'] .activity-totals span, html[data-theme='3d'] .transaction-detail span, html[data-theme='3d'] .transaction-date span,
+html[data-theme='3d'] .secure-pay-dialog p, html[data-theme='3d'] .secure-pay-dialog label, html[data-theme='3d'] .secure-pay-dialog > small { color: var(--muted); }
+html[data-theme='3d'] .contact-arrow, html[data-theme='3d'] .contact-see-all, html[data-theme='3d'] .contact-preview span,
+html[data-theme='3d'] .contact-transfer > span { color: var(--emerald); }
+html[data-theme='3d'] .contact-messages { background: #040a1666; border: 1px solid var(--edge); scrollbar-width: thin; }
+html[data-theme='3d'] .contact-message.sent, html[data-theme='3d'] .outgoing .transaction-bubble { background: linear-gradient(145deg, #1fae8a, #0f6b63); border-color: #2ee6a655; }
+html[data-theme='3d'] .contact-message.received, html[data-theme='3d'] .incoming .transaction-bubble { background: linear-gradient(145deg, #2c3f66, #1a2744); border-color: var(--edge); }
+html[data-theme='3d'] .activity-filter.active { background: #2ee6a61a; border-color: var(--emerald); color: var(--emerald); }
+html[data-theme='3d'] .transaction-detail .transaction-open-chat { background: #2ee6a614; border-color: #2ee6a655; color: var(--emerald); }
+html[data-theme='3d'] .transaction-detail .transaction-open-chat:hover { border-color: var(--emerald); background: #2ee6a622; }
+/* `b` is forced to the light text colour above, so coloured <b> values need !important to win */
+html[data-theme='3d'] .activity-in-total, html[data-theme='3d'] .transaction-detail .detail-posted { color: var(--emerald) !important; }
+html[data-theme='3d'] .activity-out-total { color: var(--text) !important; }
+html[data-theme='3d'] .secure-pay-dialog p b { color: var(--emerald) !important; }
+html[data-theme='3d'] .contact-transfer button:not(:disabled), html[data-theme='3d'] .mpin-setup button:not(:disabled), html[data-theme='3d'] .secure-pay-button:not(:disabled) {
+  background: linear-gradient(135deg, #2ee6a6, #1fae8a); color: #03261e; box-shadow: 0 10px 24px #2ee6a640, inset 0 1px 0 #ffffff66;
+}
+html[data-theme='3d'] .contact-transfer button:disabled, html[data-theme='3d'] .mpin-setup button:disabled, html[data-theme='3d'] .secure-pay-button:disabled { background: #ffffff14; color: var(--muted); }
+html[data-theme='3d'] .contact-transfer-message.error { color: #ffb0b0; }
+html[data-theme='3d'] .contact-transfer-message.success { color: var(--emerald); }
+html[data-theme='3d'] .secure-pay-backdrop { background: #02060fcc; }
+html[data-theme='3d'] .secure-pay-dialog { background: #0d1a36; border-color: var(--edge); box-shadow: 0 30px 80px #000000aa, 0 0 40px #2ee6a61a, inset 0 1px 0 #ffffff14; }
+html[data-theme='3d'] .secure-pay-icon { background: #2ee6a61a; color: var(--emerald); }
+html[data-theme='3d'] .secure-pay-close { background: #ffffff12; color: var(--muted); }
+html[data-theme='3d'] .secure-pay-close:hover:not(:disabled) { color: var(--text); }
+html[data-theme='3d'] .contact-transfer .contact-mpin-input, html[data-theme='3d'] .mpin-setup input { background: #0a1630; border-color: var(--edge); color: var(--text); }
+
+/* ---------- Transactions page: view switch + list view (3D) ---------- */
+html[data-theme='3d'] .view-switch { background: #ffffff08; border-color: var(--edge); }
+html[data-theme='3d'] .view-switch-btn { color: var(--muted); }
+html[data-theme='3d'] .view-switch-btn.active { background: linear-gradient(135deg, #2ee6a6, #1fae8a); color: #03261e; box-shadow: 0 6px 16px #2ee6a640; }
+html[data-theme='3d'] .activity-open-page { background: #2ee6a614; border-color: #2ee6a655; color: var(--emerald); }
+html[data-theme='3d'] .activity-open-page:hover { border-color: var(--emerald); background: #2ee6a622; }
+html[data-theme='3d'] .tx-row-wrap { border-color: var(--edge); }
+html[data-theme='3d'] .tx-row:hover { background: #ffffff08; }
+html[data-theme='3d'] .tx-icon { background: linear-gradient(145deg, #1fae8a, #0f6b63); color: #eafff7; box-shadow: inset 0 0 0 1px #2ee6a655; }
+html[data-theme='3d'] .tx-icon.in { background: linear-gradient(145deg, #2c3f66, #1a2744); box-shadow: inset 0 0 0 1px var(--edge); }
+html[data-theme='3d'] .tx-title, html[data-theme='3d'] .tx-amount { color: var(--text); }
+html[data-theme='3d'] .tx-ago { color: var(--muted); }
+html[data-theme='3d'] .tx-flow { color: var(--muted); }
+html[data-theme='3d'] .contact-date span { color: var(--muted, #8fa0c4); background: #0f1a30; border: 1px solid var(--edge); }

@@ -9,9 +9,10 @@ type SidebarProps = {
   navLabel: string
   navIcon: string
   navTo: string
+  extraNav?: Array<{ label: string; icon: string; to: string; end?: boolean }>
 }
 
-export function Sidebar({ section, user, onSignOut, navLabel, navIcon, navTo }: SidebarProps) {
+export function Sidebar({ section, user, onSignOut, navLabel, navIcon, navTo, extraNav = [] }: SidebarProps) {
   return <aside className="sidebar">
     <Brand />
     <div className="workspace-label">{section}</div>
@@ -19,6 +20,9 @@ export function Sidebar({ section, user, onSignOut, navLabel, navIcon, navTo }: 
       <NavLink className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} to={navTo} end>
         <span className="nav-icon">{navIcon}</span>{navLabel}
       </NavLink>
+      {extraNav.map((item) => <NavLink key={item.to} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} to={item.to} end={item.end ?? true}>
+        <span className="nav-icon">{item.icon}</span>{item.label}
+      </NavLink>)}
     </nav>
     <div className="sidebar-bottom">
       <div className="secure-note"><span className="secure-icon">◈</span><div><b>{user.role === 'AUDITOR' ? 'Read-only access' : 'Secure banking'}</b><span>{user.role === 'AUDITOR' ? 'Changes are disabled' : 'Protected account access'}</span></div></div>

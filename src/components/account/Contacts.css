@@ -69,3 +69,8 @@
 .recipient-resolving { margin: 0 0 10px; color: #7f8981; font-size: 12px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 620px) { .contact-section, .contact-history { padding: 15px; } .contact-row { width: 100%; } .contact-messages { padding: 9px; } }
+
+.contact-date { display: flex; align-items: center; justify-content: center; margin: 8px 0 3px; }
+.contact-date span { color: #727c74; background: #f2f4f1; border: 1px solid #e9ece8; border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 650; letter-spacing: 0; text-transform: none; }
+.contact-message .contact-message-status { display: flex; align-items: center; gap: 6px; }
+.contact-message .contact-message-status i { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #30c777; color: #fff; font-size: 12px; font-style: normal; }

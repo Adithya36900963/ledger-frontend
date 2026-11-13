@@ -116,3 +116,13 @@ export const formatRole = (role: UserRole) => role === 'ACCOUNT_HOLDER'
 export const transactionLabel = (type: TransactionType) => type === 'DEPOSIT'
   ? 'Deposit'
   : type === 'WITHDRAWAL' ? 'Withdrawal' : 'Transfer'
+
+export const formatAccountNumber = (accountId: number) => `LL-${String(accountId).padStart(8, '0')}`
+
+/** Accepts "LL-00000002", "ll00000002" or "2"; returns null when it is not a usable account number. */
+export const parseAccountNumber = (value: string): number | null => {
+  const digits = value.trim().toUpperCase().replace(/^LL-?/, '')
+  if (!/^\d{1,18}$/.test(digits)) return null
+  const accountId = Number(digits)
+  return Number.isSafeInteger(accountId) && accountId > 0 ? accountId : null
+}

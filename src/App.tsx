@@ -40,9 +40,14 @@ function AppRoutes() {
         <Route element={<RequireVerified user={auth.user} />}>
           <Route path="/account" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/account/contacts" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/account/transactions" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/account/make-transaction" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/account/audit" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/account/contacts/:accountId" element={<RoleRoute user={auth.user} role="ACCOUNT_HOLDER"><AccountWorkspace user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/admin" element={<RoleRoute user={auth.user} role="ADMIN"><AdminDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
           <Route path="/auditor" element={<RoleRoute user={auth.user} role="AUDITOR"><AuditorDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/auditor/ledger" element={<RoleRoute user={auth.user} role="AUDITOR"><AuditorDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
+          <Route path="/auditor/audit" element={<RoleRoute user={auth.user} role="AUDITOR"><AuditorDashboard user={auth.user!} onSignOut={auth.logout} /></RoleRoute>} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to={auth.user ? rolePath[auth.user.role] : '/login'} replace />} />

@@ -1,7 +1,7 @@
-import { memo, useEffect, useMemo, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { AuthUser, Account, AuditEvent, LedgerEntry, TransferHistory, TransactionResult, TransactionType } from '../../types/ledger'
-import { formatMoney } from '../../types/ledger'
+import { formatAccountNumber, formatMoney } from '../../types/ledger'
 import { Sidebar } from '../common/Sidebar'
 import { StatCard } from '../common/StatCard'
 import { BalanceCard } from './BalanceCard'
@@ -48,9 +48,15 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
   const [resolvedContact, setResolvedContact] = useState<{ id: number; name: string } | null>(null)
   const [contactLookupError, setContactLookupError] = useState<{ id: number; message: string } | null>(null)
   const navigate = useNavigate()
+  const openContact = useCallback((accountId: number) => navigate(`/account/contacts/${accountId}`), [navigate])
   const location = useLocation()
   const { accountId: contactRouteId } = useParams()
   const isContactsPage = location.pathname === '/account/contacts'
+  const isTransactionsPage = location.pathname === '/account/transactions'
+  const isMakeTransactionPage = location.pathname === '/account/make-transaction'
+  const isAuditPage = location.pathname === '/account/audit'
+  const pageTitle = isTransactionsPage ? 'Transactions' : isMakeTransactionPage ? 'Make a transaction' : isAuditPage ? 'Your audit activity' : isContactsPage || contactRouteId ? 'Transfer contacts' : 'Overview'
+  const openTransactions = useCallback(() => navigate('/account/transactions'), [navigate])
   const contacts = useMemo(() => {
     const transfers = props.transactions.filter((item) => item.type === 'TRANSFER')
     const ids = new Set<number>()
@@ -62,7 +68,7 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
     return [...ids].map((id) => {
       const demoContact = demoAdminUsers.find((person) => person.accountId === id)
       const historyContact = props.transfers.find((item) => item.counterpartyAccountId === id)
-      return { id, name: historyContact?.counterpartyName ?? demoContact?.name ?? `Account ${String(id).padStart(8, '0')}` }
+      return { id, name: historyContact?.counterpartyName ?? demoContact?.name ?? formatAccountNumber(id) }
     })
   }, [props.transactions, props.transfers, props.account?.accountId])
   const requestedAccountId = Number(contactRouteId)
@@ -71,7 +77,7 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
     ?? (resolvedContact?.id === requestedAccountId ? resolvedContact : null)
     ?? (knownDemoRecipient ? { id: requestedAccountId, name: knownDemoRecipient.name } : null)
     ?? (Number.isSafeInteger(requestedAccountId) && requestedAccountId > 0
-      ? { id: requestedAccountId, name: `Account ${String(requestedAccountId).padStart(8, '0')}` }
+      ? { id: requestedAccountId, name: formatAccountNumber(requestedAccountId) }
       : undefined)
   const recipientResolved = contacts.some((contact) => contact.id === requestedAccountId)
     || resolvedContact?.id === requestedAccountId || Boolean(knownDemoRecipient)
@@ -96,26 +102,51 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
   }, [props.transfers, props.transactions, selectedContact?.id])
 
   return <div className="app-shell">
-    <Sidebar section="PERSONAL BANKING" user={props.user} onSignOut={props.logout} navLabel="Overview" navIcon="▦" navTo="/account" />
+    <Sidebar section="PERSONAL BANKING" user={props.user} onSignOut={props.logout} navLabel="Overview" navIcon="▦" navTo="/account" extraNav={[
+      { label: 'Make a transaction', icon: '＋', to: '/account/make-transaction' },
+      { label: 'Transfer contacts', icon: '♙', to: '/account/contacts', end: false },
+      { label: 'Transactions', icon: '⇅', to: '/account/transactions' },
+      { label: 'Your audit activity', icon: '◈', to: '/account/audit' },
+    ]} />
     <main className="main-content" id="dashboard">
-      <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div className="topbar-right">{props.demo ? <DemoBadge /> : <><span className="live-dot" /> Secure account access</>}</div></header>
+      <header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <b>{pageTitle}</b></div><div className="topbar-right">{props.demo ? <DemoBadge /> : <><span className="live-dot" /> Secure account access</>}</div></header>
       <div className="content-wrap">
-        {isContactsPage ? <section className="contact-page">
+        {isMakeTransactionPage ? <section className="contact-page">
+          <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
+          {props.account ? <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} onOpenContact={openContact} /> : <div className="loading-line"><span className="loader" /> Loading your account…</div>}
+        </section> : isAuditPage ? <section className="contact-page">
+          <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
+          <div className="contact-history-heading"><div><div className="eyebrow">ACCOUNTABILITY</div><h1>Your audit activity</h1></div></div>
+          {props.historyError && <div className="inline-error history-error" role="alert">Account history could not be loaded: {props.historyError}</div>}
+          <AuditEventsCard events={props.auditEvents} title="Your audit activity" loading={props.historyLoading} />
+        </section> : isTransactionsPage ? <section className="contact-page">
+          <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
+          <ActivityCard page transactions={props.transactions} entries={props.ledgerEntries} transfers={props.transfers} accountId={props.account?.accountId ?? 0} demo={props.demo} loading={props.historyLoading} onOpenContact={openContact} />
+        </section> : isContactsPage ? <section className="contact-page">
           <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
           <div className="contact-history-heading"><div><div className="eyebrow">YOUR TRANSFER CONTACTS</div><h1>Choose a contact</h1><p className="contacts-description">Open a contact to see every transfer in your transaction chat.</p></div><span>{contacts.length} contacts</span></div>
-          {contacts.length ? <div className="contact-list contact-directory">{contacts.map((contact) => <button className="contact-row" key={contact.id} onClick={() => navigate(`/account/contacts/${contact.id}`)}><span className="contact-avatar">{contact.name.slice(0, 1).toUpperCase()}</span><span className="contact-label"><b>{contact.name}</b><small>LL-{String(contact.id).padStart(8, '0')}</small></span><span className="contact-open-hint">View transaction chat</span><span className="contact-arrow">›</span></button>)}</div> : <div className="contact-empty">Your transfer contacts will appear here after your first transfer.</div>}
+          {contacts.length ? <div className="contact-list contact-directory">{contacts.map((contact) => <button className="contact-row" key={contact.id} onClick={() => navigate(`/account/contacts/${contact.id}`)}><span className="contact-avatar">{contact.name.slice(0, 1).toUpperCase()}</span><span className="contact-label"><b>{contact.name}</b><small>{formatAccountNumber(contact.id)}</small></span><span className="contact-open-hint">View transaction chat</span><span className="contact-arrow">›</span></button>)}</div> : <div className="contact-empty">Your transfer contacts will appear here after your first transfer.</div>}
         </section> : contactRouteId ? <section className="contact-page">
           <button className="contact-back" onClick={() => navigate('/account')}>← Back to overview</button>
           {selectedContact ? <>
-            <header className="contact-profile"><span className="contact-avatar">{selectedContact.name.slice(0, 1).toUpperCase()}</span><div><div className="eyebrow">TRANSFER CONTACT</div><h1>{selectedContact.name}</h1><p>LL-{String(selectedContact.id).padStart(8, '0')}</p></div></header>
+            <header className="contact-profile"><span className="contact-avatar">{selectedContact.name.slice(0, 1).toUpperCase()}</span><div><div className="eyebrow">TRANSFER CONTACT</div><h1>{selectedContact.name}</h1><p>{formatAccountNumber(selectedContact.id)}</p></div></header>
             <section className="contact-history"><div className="contact-history-heading"><div><div className="eyebrow">ACCOUNT HISTORY</div><h2>Transactions with {selectedContact.name}</h2></div><span>{contactTransactions.length} transfers</span></div>
               {!recipientResolved && !contactLookupError && <p className="recipient-resolving">Looking up recipient account…</p>}
               {contactLookupError?.id === requestedAccountId && <div className="contact-transfer-message error" role="alert">{contactLookupError.message}</div>}
-              {contactTransactions.length ? <div className="contact-messages">{contactTransactions.map((transaction) => {
+              {contactTransactions.length ? <div className="contact-messages">{contactTransactions.map((transaction, index) => {
                 const received = transaction.toAccountId === props.account?.accountId
-                return <article className={`contact-message ${received ? 'received' : 'sent'}`} key={transaction.transactionId}>
-                  <b>{received ? '+' : '−'}{formatMoney(transaction.amount)}</b><span>{received ? 'Received' : 'Sent'} · Posted</span><small>{new Date(transaction.createdAt).toLocaleString()}</small><code>{transaction.transactionId}</code>
-                </article>
+                const day = new Date(transaction.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
+                const previous = index > 0 ? contactTransactions[index - 1] : null
+                const previousDay = previous ? new Date(previous.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : null
+                return <Fragment key={transaction.transactionId}>
+                  {day !== previousDay && <div className="contact-date"><span>{day}</span></div>}
+                  <article className={`contact-message ${received ? 'received' : 'sent'}`}>
+                    <b>{formatMoney(transaction.amount)}</b>
+                    <span className="contact-message-status"><i>{received ? '↓' : '↑'}</i>{received ? 'Received' : 'Paid'} · Posted</span>
+                    <small>{new Date(transaction.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</small>
+                    <code>{transaction.transactionId}</code>
+                  </article>
+                </Fragment>
               })}</div> : <div className="contact-empty">No transfers with this contact yet.</div>}
               <form className="contact-transfer" onSubmit={(event) => {
                 event.preventDefault()
@@ -170,13 +201,13 @@ export const AccountDashboard = memo(function AccountDashboard(props: AccountDas
         {props.loading && <div className="loading-line"><span className="loader" /> Loading your account…</div>}
         {props.loadError && !props.loading && <section className="load-error" role="alert"><div className="error-symbol">!</div><div><b>We couldn’t load your account</b><p>{props.loadError}</p><button className="text-button" onClick={props.refresh}>Try again</button></div></section>}
         {props.account && <>
-          <section className="summary-grid" aria-label="Account summary"><BalanceCard account={props.account} /><StatCard label="Account status" value="Active" detail="Your account is ready to use" icon="↗" /><StatCard label="Account number" value={`LL-${String(props.account.accountId).padStart(8, '0')}`} detail="Use this number to receive money" icon="⌁" tone="purple" /></section>
+          <section className="summary-grid" aria-label="Account summary"><BalanceCard account={props.account} /><StatCard label="Account status" value="Active" detail="Your account is ready to use" icon="↗" /><StatCard label="Account number" value={formatAccountNumber(props.account.accountId)} detail="Use this number to receive money" icon="⌁" tone="purple" /></section>
           <section className="contact-section"><button className="contact-section-heading contact-heading-button" onClick={() => navigate('/account/contacts')}><div><div className="eyebrow">YOUR TRANSFER CONTACTS</div><h2>People you’ve sent money to</h2></div><span className="contact-see-all">See contacts <b>›</b></span></button>
             <button className="contact-preview" onClick={() => navigate('/account/contacts')}>Browse your transfer contacts and open a person’s transaction chat <span>→</span></button>
           </section>
           <section className="content-grid">
-            <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} onOpenContact={(accountId) => navigate(`/account/contacts/${accountId}`)} />
-            <ActivityCard transactions={props.transactions} entries={props.ledgerEntries} demo={props.demo} loading={props.historyLoading} />
+            <TransactionFormCard busy={props.busy} error={props.error} notice={props.notice} onSubmit={props.submit} onOpenContact={openContact} />
+            <ActivityCard transactions={props.transactions} entries={props.ledgerEntries} transfers={props.transfers} accountId={props.account.accountId} demo={props.demo} loading={props.historyLoading} onOpenContact={openContact} onOpenPage={openTransactions} />
           </section>
           {props.historyError && <div className="inline-error history-error" role="alert">Account history could not be loaded: {props.historyError}</div>}
           <AuditEventsCard events={props.auditEvents} title="Your audit activity" loading={props.historyLoading} />

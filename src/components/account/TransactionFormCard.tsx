@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { TransactionType } from '../../types/ledger'
+import { parseAccountNumber } from '../../types/ledger'
 import { Feedback } from '../common/Feedback'
 import { Panel } from '../common/Panel'
 
@@ -20,13 +21,13 @@ export function TransactionFormCard({ busy, error, notice, onSubmit, onOpenConta
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const normalizedRecipient = recipient.trim().toUpperCase().replace(/^LL-/, '')
     if (type === 'TRANSFER') {
-      if (!/^\d{1,18}$/.test(normalizedRecipient) || Number(normalizedRecipient) <= 0) {
+      const recipientId = parseAccountNumber(recipient)
+      if (recipientId === null) {
         setFormMessage('Enter a valid recipient account number.')
         return
       }
-      onOpenContact(Number(normalizedRecipient))
+      onOpenContact(recipientId)
       return
     }
     const numericAmount = Number(amount)
