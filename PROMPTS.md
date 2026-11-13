@@ -1,6 +1,6 @@
 # AI development log
 
-AI assistance is allowed for this assessment. This is a transparent retrospective of prompts in the project conversation. The original message timestamps were not preserved in the repository, so these entries are dated when recorded, not backdated to imply a longer coding history. Continue adding entries as work happens. Commit links below refer to real local commits and will work on GitHub only after the remote is private and those commits are pushed.
+AI assistance is allowed for this assessment. This is a transparent retrospective of prompts in the project conversation. The original message timestamps were not preserved in the repository, so these entries are dated when recorded, not backdated to imply a longer coding history. Continue adding entries as work happens. Commit links below refer to real local commits; they are viewable only when the repository is public and those commits are pushed.
 
 ## 2026-11-10 — Connect frontend services to Ledger API (retrospective)
 
@@ -49,3 +49,12 @@ AI assistance is allowed for this assessment. This is a transparent retrospectiv
 - **What was wrong:** The prior app selected dashboards directly from auth state and the sidebar used a hash link, so screens did not have role-aware URLs or route-level code splitting.
 - **What I changed instead:** Moved page selection into React Router, redirected unauthorized or unverified sessions, split role dashboards into lazy chunks, and stabilized data/action callbacks to avoid avoidable renders. Production build passed and lint is clean.
 - **Commits:** [7f39ab6 — role-aware routes and lazy-loaded pages](https://github.com/Adithya36900963/ledger-frontend/commit/7f39ab6) and [22496c5 — stabilize session and data callbacks](https://github.com/Adithya36900963/ledger-frontend/commit/22496c5).
+
+## 2026-11-13 — Open recipient chats and confirm transfers securely (retrospective)
+
+- **What I asked:** Entering an account number in Make a transaction should open a chat for that account; entering an amount and pressing Pay should request MPIN and avoid duplicate transactions.
+- **What the tool produced:** Account-number navigation, recipient name lookup, a chat composer, MPIN confirmation dialog, and idempotency-key requests connected to the backend. Transaction history refreshes after a successful transfer.
+- **What needed correction:** The initial version put the MPIN field directly beside the amount. I clarified the desired sequence: recipient chat, amount, Pay, MPIN confirmation, then secure payment.
+- **What I changed instead:** Kept the amount composer at the bottom of the chat and moved MPIN entry to a separate confirmation dialog. The idempotency key is tied to the confirmation attempt so retrying that request does not post a second ledger transfer.
+- **Verification and limits:** `npm run lint` and `npm run build` passed on 2026-11-13. The demo flow uses in-memory sample data and does not prove backend persistence. The frontend currently has additional local modifications; review `git status` before deciding what to commit or submit.
+- **Commit:** [46cca47 — transfer chat confirmation](https://github.com/Adithya36900963/ledger-frontend/commit/46cca47). The follow-up UI edits visible in the current working tree were not included in that commit at the time this note was written.
